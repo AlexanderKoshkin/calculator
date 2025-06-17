@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>SA Rand Interest Rate Calculator</title>
+  <style>
+    body {
+      background: #fff;
+      color: #222;
+      font-family: 'Inter', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    main {
+      margin: auto;
+      width: 100%;
+      max-width: 400px;
+      padding: 2rem;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+      border-radius: 8px;
+      background: #fafafa;
+      margin-top: 5vh;
+    }
+    h1 {
+      font-size: 1.5rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      letter-spacing: 0.1rem;
+    }
+    label, input {
+      display: block;
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+    input[type="number"] {
+      font-size: 1.2rem;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background: #fff;
+      margin-top: 0.5rem;
+    }
+    .output-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    .output-table th, .output-table td {
+      text-align: left;
+      padding: 0.5rem;
+      border: none;
+    }
+    .output-table th {
+      background: #f0f0f0;
+    }
+    .output-table tr:not(:last-child) td {
+      border-bottom: 1px solid #eee;
+    }
+    .note {
+      color: #666;
+      font-size: 0.95rem;
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+    @media (max-width: 500px) {
+      main {
+        padding: 1rem;
+        max-width: 98vw;
+        margin-top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Interest Calculator (SA Rand)</h1>
+    <form id="interest-form" autocomplete="off">
+      <label for="deposit">
+        Deposit Amount (R)
+        <input type="number" id="deposit" required min="0" step="0.01" placeholder="Enter amount in rands" autofocus />
+      </label>
+    </form>
+    <table class="output-table" id="results" style="display:none;">
+      <thead>
+        <tr>
+          <th>Period</th>
+          <th>Brokstock<br/>Interest</th>
+          <th>Bank (5%)</th>
+          <th>Bank (6%)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="note">
+      Interest paid monthly to your Brokstock investing account.<br>
+      Brokstock rates: 8%/10% p.a. (see brackets).<br>
+      Bank rates: typical 5%–6% p.a. <br>
+      <small>For illustration only.</small>
+    </div>
+  </main>
+  <script>
+    function getBrokstockRate(amount) {
+      if (amount > 49999) return 0.10;
+      if (amount > 4999) return 0.08;
+      return 0;
+    }
+
+    function calculateInterest(amount, rate, months) {
+      // Compound interest, compounded monthly, payouts monthly
+      let monthlyRate = rate / 12;
+      let earnings = 0;
+      let balance = amount;
+      for (let i = 0; i < months; i++) {
+        let interest = balance * monthlyRate;
+        earnings += interest;
+        // Payout to account each month (not compounded)
+      }
+      return earnings;
+    }
+
+    function renderResults(amount) {
+      const table = document.getElementById('results');
+      const tbody = table.querySelector('tbody');
+      const brokstockRate = getBrokstockRate(amount);
+
+      if (brokstockRate === 0) {
+        table.style.display = 'none';
+        tbody.innerHTML = '';
+        return;
+      }
+
+      const periods = [
+        { label: '1 month', months: 1 },
+        { label: '3 months', months: 3 },
+        { label: '6 months', months: 6 },
+        { label: '12 months', months: 12 }
+      ];
+      const bankRates = [0.05, 0.06];
+      tbody.innerHTML = '';
+
+      periods.forEach(period => {
+        const brokstock = calculateInterest(amount, brokstockRate, period.months);
+        const bank5 = calculateInterest(amount, bankRates[0], period.months);
+        const bank6 = calculateInterest(amount, bankRates[1], period.months);
+        tbody.innerHTML += `
+          <tr>
+            <td>${period.label}</td>
+            <td>R ${brokstock.toFixed(2)}</td>
+            <td>R ${bank5.toFixed(2)}</td>
+            <td>R ${bank6.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+
+      table.style.display = '';
+    }
+
+    document.getElementById('deposit').addEventListener('input', function() {
+      const amount = parseFloat(this.value);
+      if (!isNaN(amount) && amount >= 5000) {
+        renderResults(amount);
+      } else {
+        document.getElementById('results').style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
